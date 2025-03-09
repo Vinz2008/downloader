@@ -1,3 +1,3 @@
 #include <stdbool.h>
 
-bool download(char* url, char* outfile);
+bool download(const char* url, char* outfile);
