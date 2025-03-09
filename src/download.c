@@ -1,4 +1,5 @@
 #include "download.h"
+#include "http_header.h"
 #define _POSIX_C_SOURCE 200112L
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,12 +40,17 @@ bool download(char* url, char* outfile){
 
     ssize_t bytes_sent = send(sock, buf, strlen(buf), 0);
 
-    char answer_buf[MAX_ANSWER_LENGTH];
+    char answer_buf_array[MAX_ANSWER_LENGTH];
+    char* answer_buf = (char*)answer_buf_array;
 
     // TODO : parse http header
     
-    ssize_t bytes_received = recv(sock, answer_buf, sizeof(answer_buf), 0);
+    ssize_t bytes_received = recv(sock, answer_buf, MAX_ANSWER_LENGTH, 0);
 
+    struct http_header header = parse_header(&answer_buf);
+
+
+    free_header(header);
     FILE* f_out = fopen(outfile, "w");
     fwrite(answer_buf, sizeof(char), bytes_received, f_out);
     fclose(f_out);
