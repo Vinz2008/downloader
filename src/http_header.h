@@ -5,6 +5,12 @@ enum Connection {
     CONNECTION_OTHER,
 };
 
+enum TransferEncoding {
+    TRANSFER_ENCODING_NONE,
+    TRANSFER_ENCODING_CHUNKED,
+    TRANSFER_ENCODING_OTHER,
+};
+
 struct http_header {
     float version_number;
     int answer_code;
@@ -15,6 +21,7 @@ struct http_header {
     char* server_name;
     char* location_redirection;
     enum Connection connection;
+    enum TransferEncoding encoding;
 };
 
 struct http_header* parse_header(char** buf);

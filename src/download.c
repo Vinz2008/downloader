@@ -187,7 +187,8 @@ bool download(const char* url, const char* outfile){
 
     // TODO : use HTTP 1.1
     const char* path = get_url_path(url);
-    const char* send_format = "GET %s HTTP/1.0\nHost: %s\nConnection: Keep-Alive\nAccept: */*\r\n\r\n";
+    //const char* send_format = "GET %s HTTP/1.1\nHost: %s\nUser-Agent: download/1.0\nConnection: Keep-Alive\nAccept: */*\r\n\r\n";
+    const char* send_format = "GET %s HTTP/1.1\nHost: %s\nUser-Agent: download/1.0\r\n\r\n";
 
     char* url_trimmed = get_url_trimmed(url);
 
@@ -222,11 +223,18 @@ bool download(const char* url, const char* outfile){
     if (is_https){
         while ((current_chunk_received = SSL_read(conn, answer_buf + bytes_received, MAX_ANSWER_LENGTH)) > 0){
             bytes_received += current_chunk_received;
+            /*if (memcmp(answer_buf[bytes_received-2], "\r\n", 2) == 0){
+                break;
+            }*/
         }
 
     } else {
         while ((current_chunk_received = recv(sock, answer_buf + bytes_received, MAX_ANSWER_LENGTH, 0)) > 0){
             bytes_received += current_chunk_received;
+        
+            /*if (memcmp(answer_buf + (bytes_received-2), "\r\n", 2) == 0){
+                break;
+            }*/
         }
     }
 

@@ -91,12 +91,37 @@ static inline char* parse_server_name(char** buf){
     return get_string_until(buf, '\n');
 }
 
-static inline char* parse_connection(char** buf){
+static inline char* parse_location(char** buf){
     return get_string_until(buf, '\n');
 }
 
-static inline char* parse_location(char** buf){
-    return get_string_until(buf, '\n');
+static enum Connection parse_connection(char** buf){
+    enum Connection connection = CONNECTION_CLOSE;
+
+    char* connection_str = get_string_until(buf, '\n');
+    if (strcmp(connection_str, "close") != 0){
+        connection = CONNECTION_CLOSE;
+    } else {
+        connection = CONNECTION_OTHER;
+    }
+    free(connection_str);
+
+    return connection;
+}
+
+static enum TransferEncoding parse_transfer_encoding(char** buf){
+    enum TransferEncoding transfer_encoding = TRANSFER_ENCODING_NONE;
+
+
+    char* encoding_str = get_string_until(buf, '\n');
+    if (strcmp(encoding_str, "chunked") == 0){
+        transfer_encoding = TRANSFER_ENCODING_CHUNKED;
+    } else {
+        transfer_encoding = TRANSFER_ENCODING_OTHER;
+    }
+    free(encoding_str);
+
+    return transfer_encoding;
 }
 
 static void ignore_line(char** buf){
@@ -149,6 +174,7 @@ struct http_header* parse_header(char** buf){
     const char* Content_Type_static_str = "Content-Type";
     const char* Connection_static_str = "Connection";
     const char* Location_static_str = "Location";
+    const char* Transfer_Encoding_static_str = "Transfer-Encoding";
 
     const int colon_plus_space_length = 2;
 
@@ -159,6 +185,7 @@ struct http_header* parse_header(char** buf){
     char* location_redirection = NULL;
 
     enum Connection connection = CONNECTION_CLOSE;
+    enum TransferEncoding transfer_encoding = TRANSFER_ENCODING_NONE;
 
     while (**buf != '\0'){
         // TODO : add Content-Length
@@ -174,14 +201,14 @@ struct http_header* parse_header(char** buf){
             // line : Server: gws
             *buf += strlen(Server_static_str) + colon_plus_space_length;
             server_name = parse_server_name(buf);
+        } else if (startswith(*buf, Transfer_Encoding_static_str)){
+            // line : Transfer-Encoding: chunked
+            *buf += strlen(Server_static_str) + colon_plus_space_length;
+            transfer_encoding = parse_transfer_encoding(buf);
         } else if (startswith(*buf, Connection_static_str)){
             // line : Connection: close
             *buf += strlen(Connection_static_str) + colon_plus_space_length;
-            char* connection_str = parse_connection(buf);
-            if (strcmp(connection_str, "close") != 0){
-                connection = CONNECTION_OTHER;
-            }
-            free(connection_str);
+            connection = parse_connection(buf);
         } else if (startswith(*buf, Date_static_str)){
             // line : Date: Sun, 09 Mar 2025 15:15:40 GMT
             *buf += strlen(Date_static_str) + colon_plus_space_length;
