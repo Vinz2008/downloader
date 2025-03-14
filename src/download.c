@@ -133,7 +133,7 @@ const char* get_port_string(bool is_https){
 }
 
 
-bool download(const char* url, char* outfile){
+bool download(const char* url, const char* outfile){
     bool is_https = startswith(url, "https://");
 
     SSL* conn = NULL;
